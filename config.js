@@ -1,5 +1,5 @@
 'use strict';
-function configure(app, express, flash, browserify) {
+function configure(app, express, flash) {
     app.configure(function () {
         var pub, bundle;
         pub = __dirname + '/public';
@@ -18,8 +18,6 @@ function configure(app, express, flash, browserify) {
             next();
         });
         app.use(express.static(pub));
-        bundle = browserify(__dirname + '/client.js');
-        app.use(bundle);
     });
     app.configure('development', function () {
         app.use(express.errorHandler({dumpExceptions: true}));

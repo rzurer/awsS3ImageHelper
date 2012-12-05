@@ -1,5 +1,5 @@
 "use strict";
-exports.awsS3ImageHelper = function (common) {
+exports.awsS3ImageHelper = function (common, knox, imagemagick) {
 	var that = {
 			heartbeat : function (callback) {
 				if (callback) {
