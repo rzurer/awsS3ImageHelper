@@ -1,4 +1,5 @@
-awsS3ImageHelper
-================
+AWS S3 Image Helper
 
-Uses imagemagick and knox to manage images on Amazon S3
+===============
+
+A utility to manage image storage and retrieval to and from Amazon S3
