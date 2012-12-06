@@ -1,0 +1,8 @@
+extends layout 
+block content
+	.homeContainer
+	script
+		$(function () {
+			var dependencies = !{JSON.stringify(healthCheck)};
+			console.log(dependencies);
+		})

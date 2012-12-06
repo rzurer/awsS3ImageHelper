@@ -1,11 +1,13 @@
 "use strict";
-exports.awsS3ImageHelper = function (common, knox, imagemagick) {
+exports.awsS3ImageHelper = function (awsS3Helper, imageHelper) {
 	var that = {
-			heartbeat : function (callback) {
-				if (callback) {
-					callback(common.getCurrentDate());
-				}
+			healthCheck : function () {
+				return {
+					awsS3Helper: awsS3Helper.healthCheck(),
+					imageHelper : imageHelper.healthCheck()
+				};
 			}
 		};
 	return that;
 };
+
