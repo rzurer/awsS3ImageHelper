@@ -1,8 +1,9 @@
 "use strict";
-exports.awsS3Helper = function (fs, mime, knox) {
+exports.awsS3Helper = function (common, fs, mime, knox) {
 	var S3_KEY = 'AKIAJX4OEAZEBFQXY4FA',
 		S3_SECRET = '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',
         S3_BUCKET = 'philatopedia',
+        headers = { 'x-amz-acl': 'public-read' },
         client = knox.createClient({
             key: S3_KEY,
             secret: S3_SECRET,
@@ -18,38 +19,37 @@ exports.awsS3Helper = function (fs, mime, knox) {
             return contentType;
         },
 		that = {
-			healthCheck : function () {
-				return {
-					fs: fs,
-					mime : mime,
-					knox : knox
-				};
+			uploadForUser : function (filePath, userId, callback) {
+				var err;
+				if (common.isUndefinedOrWhitespace(userId)) {
+					err = "UserId may not be empty";
+					callback(err);
+					return;
+				}
+				that.upload(filePath, callback, userId);
+
 			},
-	        saveUserFile : function (userId, fileName, callback) {
-	            var s3Filename, headers, req;
-	            s3Filename = '/' + userId + '/' + fileName.substr(fileName.lastIndexOf('/') + 1);
-	            fs.stat(fileName, function (err, stat) {
-	                if (err) {
-	                    throw err;
-	                }
-	                fs.readFile(fileName, function (err, buf) {
-	                    var req;
-	                    if (err) {
-	                        throw err;
-	                    }
-	                    req = client.put(s3Filename, {
-	                        'Content-Length': stat.size,
-	                        'Content-Type': getContentType(fileName)
-	                    });
-	                    req.on('response', function (res) {
-	                        if (callback) {
-	                            callback(req, res);
-	                        }
-	                    });
-	                    req.end(buf);
-	                });
-	            });
-	        }
+			upload : function (filePath, callback, userId) {
+				var fileName, s3Filename;
+				fileName = common.getFileName(filePath);
+				s3Filename = userId && userId.trim().length > 0 ? userId.trim() + '/' + fileName : fileName;
+				client.putFile(filePath, s3Filename, headers, function (err, res) { //
+					if (callback) {
+						callback(err, res);
+					}
+				});
+			},
+			uploadBuffer : function (buffer, s3Filename, callback) {
+				var fileName;
+				client.putBuffer(buffer, s3Filename, headers, function (err, res) { //
+					if (callback) {
+						callback(err, res);
+					}
+				});
+			},
+			download : function (fileName, callback) {		
+				client.getFile(fileName, callback);
+			},
 		};
 	return that;
 };

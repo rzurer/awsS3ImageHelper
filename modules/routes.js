@@ -1,10 +1,9 @@
 "use strict";
 exports.routes = function () {
     return {
-        initialize : function (app, awsS3Helper) {
+        initialize : function (app, awsS3ImageHelper) {
             app.get('/', function (req, res) {
-                var dependencies = awsS3Helper.healthCheck();
-                res.render('home', { healthCheck : dependencies});
+                res.render('home');
             });
         }
     };
