@@ -2,7 +2,8 @@
 "use strict";
 var awsUrl = "https://philatopedia.s3.amazonaws.com/",
 	locaUrl = "/home/zurer/projects/awsS3ImageHelper/public/images/",
-	fileName = "HingedStamp.png",
+	fileName = "file_to_upload.png",
+	filePath = locaUrl + fileName,
 	sinon = require('sinon'),
 	assert = require('assert'),
     fs = require('fs'),
@@ -13,20 +14,7 @@ var awsUrl = "https://philatopedia.s3.amazonaws.com/",
 describe('awsS3Helper_module', function () {
 	describe('upload', function () {
 		it("should upload file to s3", function (done) {
-			var filePath, actual, expected, callback;
-			filePath = locaUrl + fileName;
-			expected = awsUrl + fileName;
-			callback = function (err, res) {
-				actual = res.client._httpMessage.url;
-				assert.strictEqual(200, res.statusCode);
-				assert.strictEqual(actual, expected);
-				done();
-			};
-			sut.upload(filePath, callback);
-		});
-		it("should upload file to s3 using buffer", function (done) {
-			var filePath, actual, expected, callback;
-			filePath = locaUrl + fileName;
+			var actual, expected, callback;
 			expected = awsUrl + fileName;
 			callback = function (err, res) {
 				actual = res.client._httpMessage.url;
@@ -47,18 +35,49 @@ describe('awsS3Helper_module', function () {
 		});				
 	});
 	describe('uploadBuffer', function () {
-		it("should upload file to s3", function (done) {
-			var buffer, fileName, actual, expected, callback;
+		it("should upload a buffer to s3", function (done) {
+			var buffer, s3Filename, actual, expected, callback;
 			buffer = new Buffer('now is the time for all good men to come to the aid of their party');
-			fileName = "now_is_the_time.txt";
+			s3Filename = "uploaded_buffer.txt";
 			callback = function (err, res) {
 				actual = res.client._httpMessage.url;
-				expected = awsUrl + fileName;
+				expected = awsUrl + s3Filename;
 				assert.strictEqual(200, res.statusCode);
 				assert.strictEqual(actual, expected);
 				done();
 			};
-			sut.uploadBuffer(buffer, fileName, callback);
+			sut.uploadBuffer(buffer, s3Filename, callback);
+		});
+
+	});
+	describe('uploadStream', function () {
+		it("should upload file to s3 from stream", function (done) {
+			var stream  = fs.createReadStream(filePath),
+				s3Filename = "sendingStream.png",
+				expected = awsUrl + s3Filename,
+				callback = function (err, res) {
+					var actual = res.client._httpMessage.url;
+					assert.strictEqual(200, res.statusCode);
+					assert.strictEqual(actual, expected);
+					done();
+				};
+				sut.uploadStream(stream, s3Filename, callback);
+		});	
+	});
+	describe('uploadBufferForUser', function () {
+		it("should upload buffer to s3 for user", function (done) {
+			var buffer, s3Filename, actual, userId, expected, callback;
+			buffer = new Buffer('now is the time for all good men to come to the aid of their party');
+			s3Filename = "uploaded_buffer.txt";
+			userId = '    bob     ';
+			callback = function (err, res) {
+				actual = res.client._httpMessage.url;
+				expected = awsUrl + userId.trim() + '/' +  s3Filename;
+				assert.strictEqual(200, res.statusCode);
+				assert.strictEqual(actual, expected);
+				done();
+			};
+			sut.uploadBufferForUser(buffer, s3Filename, userId, callback);
 		});
 	});
 	describe('download', function () {
@@ -85,8 +104,7 @@ describe('awsS3Helper_module', function () {
 	});
 	describe('uploadForUser', function () {
 		it("should notify if userid is undefined", function () {
-			var filePath, userId, expected, callback;
-			filePath = locaUrl + fileName;
+			var userId, expected, callback;
 			userId = undefined;
 			expected = "UserId may not be empty";
 			callback = function (err) {
@@ -95,8 +113,7 @@ describe('awsS3Helper_module', function () {
 			sut.uploadForUser(filePath, userId, callback);
 		});
 		it("should notify if userid is whitespace", function () {
-			var filePath, userId, expected, callback;
-			filePath = locaUrl + fileName;
+			var userId, expected, callback;
 			userId = '        ';
 			expected = "UserId may not be empty";
 			callback = function (err) {
@@ -104,9 +121,8 @@ describe('awsS3Helper_module', function () {
 			};
 			sut.uploadForUser(filePath, userId, callback);
 		});	
-		it("should add trimmed userId to storage name when provided", function (done) {
-			var filePath, userId, actual, expected, callback;
-			filePath = locaUrl + fileName;
+		it("should add trimmed userId to storage name when provided and upload to s3", function (done) {
+			var userId, actual, expected, callback;
 			userId = '    bob     ';
 			callback = function (err, res) {
 				expected = 'https://philatopedia.s3.amazonaws.com/bob/home.css';
@@ -121,24 +137,3 @@ describe('awsS3Helper_module', function () {
 	});
 
 });
-
-    
-
-/*
-var fs = require('fs'), filename, buffer, userId, callback, writeCb;
-filename = '../misc/now_is_the_time.txt';
-buffer = new Buffer('now is the time for all good men to come to the aid of their party');
-userId = 'bob';
-callback = function (err, req, res) {
-	console.log('callback ', err);
-};
-writeCb = function (err) {
-	console.log('writeCb');
-	if (err) {
-		throw err;
-	}
-	sut.saveUserFile(userId, filename, callback);
-};
-fs.writeFile(filename, buffer, writeCb);
-
-*/

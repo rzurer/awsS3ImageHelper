@@ -18,7 +18,40 @@ exports.awsS3Helper = function (common, fs, mime, knox) {
             }
             return contentType;
         },
+        getS3FileNameForUser = function (userId, fileName) {
+  			return userId && userId.trim().length > 0 ? userId.trim() + '/' + fileName : fileName;   	
+        },
 		that = {
+			upload : function (filePath, callback, userId) {
+				var fileName, s3Filename;
+				fileName = common.getFileName(filePath);
+				s3Filename = getS3FileNameForUser(userId, fileName);
+				client.putFile(filePath, s3Filename, headers, function (err, res) { 
+					if (callback) {
+						callback(err, res);
+					}
+				});
+			},
+			uploadStream : function (stream, s3Filename, callback) {
+				var buffer;
+				stream.on('data', function (data) {
+					buffer = data;
+				});
+				stream.on('end', function () {
+					client.putBuffer(buffer, s3Filename, headers, function (err, res) { 
+						if (callback) {
+							callback(err, res);
+						}				
+					});				
+				});
+			},
+			uploadBuffer : function (buffer, s3Filename, callback) {
+				client.putBuffer(buffer, s3Filename, headers, function (err, res) { 
+					if (callback) {
+						callback(err, res);
+					}
+				});
+			},
 			uploadForUser : function (filePath, userId, callback) {
 				var err;
 				if (common.isUndefinedOrWhitespace(userId)) {
@@ -29,23 +62,16 @@ exports.awsS3Helper = function (common, fs, mime, knox) {
 				that.upload(filePath, callback, userId);
 
 			},
-			upload : function (filePath, callback, userId) {
-				var fileName, s3Filename;
-				fileName = common.getFileName(filePath);
-				s3Filename = userId && userId.trim().length > 0 ? userId.trim() + '/' + fileName : fileName;
-				client.putFile(filePath, s3Filename, headers, function (err, res) { //
-					if (callback) {
-						callback(err, res);
-					}
-				});
-			},
-			uploadBuffer : function (buffer, s3Filename, callback) {
-				var fileName;
-				client.putBuffer(buffer, s3Filename, headers, function (err, res) { //
-					if (callback) {
-						callback(err, res);
-					}
-				});
+			uploadBufferForUser : function (buffer, fileName, userId, callback) {
+				var err, s3Filename;
+				if (common.isUndefinedOrWhitespace(userId)) {
+					err = "UserId may not be empty";
+					callback(err);
+					return;
+				}
+				s3Filename = getS3FileNameForUser(userId, fileName);
+				that.uploadBuffer(buffer, s3Filename, callback);
+
 			},
 			download : function (fileName, callback) {		
 				client.getFile(fileName, callback);
