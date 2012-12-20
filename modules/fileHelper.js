@@ -32,6 +32,17 @@ exports.fileHelper = function (fs, http, https, url) {
 					return;
 				}
 				http.get(inputUrl, saveCallback);
+			},
+			getBuffer : function (stream, callback) {
+				var buffer;
+				stream.on('data', function (data) {
+					buffer = data;
+				});
+				stream.on('end', function () {
+					if (callback) {
+						callback(buffer);
+					}
+				});
 			}
 		};
 	return that;

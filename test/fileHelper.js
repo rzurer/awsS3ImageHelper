@@ -6,8 +6,15 @@ var assert = require('assert'),
 	url = require('url'),
 	http = require('http'),
 	https = require('https'),
-	sut = require('../modules/fileHelper').fileHelper(fs, http, https, url);
+	sut = require('../modules/fileHelper').fileHelper(fs, http, https, url),
+	tearDown = function () {
+		fs.unlink(folderPath + "resized_file_from_url.jpg");
+		fs.unlink(folderPath + "resized_file_from_disk.png");
+		fs.unlink(folderPath + "copied_file.jpg");
+		fs.unlink(folderPath + "downloaded_file.png");
+	};
 describe('module_fileHelper', function () {
+	afterEach(tearDown);
 	it("saveFromFile should copy a file on disk ", function (done) {			
 		var inputPath = folderPath +  "file_to_copy.jpg",
 			outputPath = folderPath +  "copied_file.jpg";
