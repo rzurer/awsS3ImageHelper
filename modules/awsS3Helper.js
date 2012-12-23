@@ -22,29 +22,42 @@ exports.awsS3Helper = function (common, fs, mime, knox, fileHelper) {
   			return userId && userId.trim().length > 0 ? userId.trim() + '/' + fileName : fileName;   	
         },
 		that = {
-			uploadFile : function (filePath, fileName, callback, userId) {
-				var s3Filename = createS3FileName(userId, fileName);
+			uploadFile : function (filePath, fileName, userId, callback) {
+				var s3Filename;
+				if ('function' == typeof userId) {
+					callback = userId;
+					userId = '';
+				}			
+				s3Filename = createS3FileName(userId, fileName);
 				client.putFile(filePath, s3Filename, headers, function (err, res) { 
 					if (callback) {
 						callback(err, res);
 					}
 				});
 			},
-			uploadBuffer : function (buffer, fileName, callback, userId) {
-				var s3Filename = createS3FileName(userId, fileName);
+			uploadBuffer : function (buffer, fileName, userId, callback) {
+				var s3Filename;
+				if ('function' == typeof userId) {
+					callback = userId;
+					userId = '';
+				}					
+				s3Filename = createS3FileName(userId, fileName);
 				client.putBuffer(buffer, s3Filename, headers, function (err, res) { 
 					if (callback) {
 						callback(err, res);
 					}
 				});
 			},
-			uploadStream : function (stream, fileName, callback, userId) {
+			uploadStream : function (stream, fileName, userId, callback) {
 				fileHelper.getBuffer(stream, function (buffer) {
-					that.uploadBuffer(buffer, fileName, callback, userId);						
+					that.uploadBuffer(buffer, fileName, userId, callback);						
 				});
 			},
-			download : function (fileName, callback) {		
+			download : function (fileName, callback) {	
 				client.getFile(fileName, callback);
+			},
+			deleteFile : function (fileName, callback) {	
+				client.deleteFile(fileName, callback);
 			},
 		};
 	return that;
