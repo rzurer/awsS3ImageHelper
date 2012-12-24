@@ -3,7 +3,6 @@
 var folderPath = '/home/zurer/projects/awsS3ImageHelper/public/images/',
 	oversizeImage = "/home/zurer/Hide stuff/temp/images/stamps/Aust2pt.jpg", //2170000 bytes
 	filePath = folderPath + "file_to_copy.jpg",
-	//ilePath = folderPath + "file_to_upload.png",
 	assert = require('assert'),
 	http = require('http'),
 	https = require('https'),
@@ -23,27 +22,37 @@ var folderPath = '/home/zurer/projects/awsS3ImageHelper/public/images/',
 	sut = require('../modules/awsS3ImageHelper').awsS3ImageHelper(awsS3Helper, imageHelper, options);
 describe('module_awsS3ImageHelper', function () {
 	describe('uploadFromFile', function () {
-		describe('when file is larger than the size limit specified in the options', function () {
-			it("should notify", function (done) {
-				var callback;
-				callback = function (err, res) {
-					assert.strictEqual(err, "The maximum file size has been exceeded [200000]")
-					done();
-				};
-				sut.uploadFromFile(oversizeImage, fileName, callback);
-			});
-		});
-		describe('when file is smaller than the size limit specified in the options', function () {
-			it("should blah", function (done) {
-				var deleteCallback = function (err, res) {
-						assert.strictEqual(res.statusCode, 204);
-						done();
-					},
-					callback = function (err, res) {
-						assert.strictEqual(res.statusCode, 200);
-						awsS3Helper.deleteFile(fileName, deleteCallback)
-					};
-				sut.uploadFromFile(filePath, fileName, callback);
+		// describe('when file is larger than the size limit specified in the options', function () {
+		// 	it("should notify", function (done) {
+		// 		var callback;
+		// 		callback = function (err, res) {
+		// 			assert.strictEqual(err, "The maximum file size has been exceeded [200000]")
+		// 			done();
+		// 		};
+		// 		sut.uploadFromFile(oversizeImage, fileName, callback);
+		// 	});
+		// });
+		// describe('when file is not greater than the size limit specified in the options', function () {
+		// 	it("should upload file to s3", function (done) {
+		// 		var deleteCallback = function (err, res) {
+		// 				assert.strictEqual(res.statusCode, 204);
+		// 				done();
+		// 			},
+		// 			callback = function (err, res) {
+		// 				assert.strictEqual(res.statusCode, 200);
+		// 				awsS3Helper.deleteFile(fileName, deleteCallback)
+		// 			};
+		// 		sut.uploadFromFile(filePath, fileName, callback);
+		// 	});
+		// });
+		// describe('when widths are specified', function () {
+		// 	it("should upload the original and one resized image per width to s3", function (done) {
+		// 		sut.uploadFromFile(filePath, fileName, [800, 300, 30], function () { done();});
+		// 	});
+		// });
+		describe('when widths are specified', function () {
+			it("should upload the original and one resized image per width to s3", function (done) {
+				sut.uploadFromFileViaStream(filePath, fileName, [800, 300, 30], function () { done();});
 			});
 		});
 	});

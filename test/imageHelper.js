@@ -76,11 +76,11 @@ describe('module_imageHelper', function () {
 			assert.strictEqual(actual, expected);
 		});
 	});
-	describe('fileIsTooBig', function () {
+	describe('validateSize', function () {
 		it("should throw when limit is undefined", function (done) {
 			var error;	
 			try {
-				sut.fileIsTooBig(image, undefined);			
+				sut.validateSize(image, undefined);			
 			} catch (err) {
 				error = err;
 			}
@@ -92,28 +92,28 @@ describe('module_imageHelper', function () {
 				assert.ok(isTooBig);
 				done();		
 			}
-			sut.fileIsTooBig(image, 871000, callback)
+			sut.validateSize(image, 871000, callback)
 		});
 		it("should return false when file from disk is less than limit", function (done) {
 			var callback = function (isTooBig) {
 				assert.ok(!isTooBig);
 				done();		
 			}
-			sut.fileIsTooBig(image, 900000, callback)
+			sut.validateSize(image, 900000, callback)
 		});
 		it("should return true when file from url is greater than limit", function (done) {
 			var callback = function (isTooBig) {
 				assert.ok(isTooBig);
 				done();		
 			}
-			sut.fileIsTooBig(externalUrl, 455000, callback)
+			sut.validateSize(externalUrl, 455000, callback)
 		});
 		it("should return false when file from url is less than limit", function (done) {
 			var callback = function (isTooBig) {
 				assert.ok(!isTooBig);
 				done();		
 			}
-			sut.fileIsTooBig(externalUrl, 500000, callback)
+			sut.validateSize(externalUrl, 500000, callback)
 		});	});
 	describe('getFeatures', function () {
 		it("should get width height and format from file on disk", function (done) {

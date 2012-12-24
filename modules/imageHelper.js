@@ -43,7 +43,7 @@ exports.imageHelper = function (imagemagick, spawn, Stream, fs) {
 			}
 			throw parseError;
 		},
-		fileIsTooBig : function (filePath, limit, callback) {
+		validateSize : function (filePath, limit, callback) {
 			if (!limit || limit <= 0) {
 				throw "Limit muxt be greater than zero";
 			}
