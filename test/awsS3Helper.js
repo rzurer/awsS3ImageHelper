@@ -6,9 +6,7 @@ var awsUrl = "https://philatopedia.s3.amazonaws.com/",
 	s3fileName = "s3UploadedFile",
 	expected = awsUrl + s3fileName,
 	buffer = new Buffer('now is the time for all good men to come to the aid of their party'),
-	userId = '    bob     ',
-	userFileName = userId.trim() + '/' +  s3fileName,
-	expectedUserUrl = awsUrl + userFileName,
+	expectedUserUrl = awsUrl,
 	assert = require('assert'),
 	http = require('http'),
 	https = require('https'),
@@ -57,30 +55,10 @@ describe("module_awsS3Helper", function () {
 			};
 			sut.uploadFile(filePath, '', callback);
 		});
-		it("should add trimmed userId to storage name when provided and upload file to s3", function (done) {
-			var actual, callback, trimmedUrl;
-			trimmedUrl  = userId.trim() + '/' + s3fileName;
-			callback = function (err, res) {
-				assert.strictEqual(res.statusCode, 200);
-				sut.download(trimmedUrl, function (err, res) {
-					assert.strictEqual(res.statusCode, 200);
-					sut.deleteFile(trimmedUrl, function (err, res) {
-						assert.strictEqual(res.statusCode, 204);
-						sut.download(trimmedUrl, function (err, res) {
-							assert.strictEqual(res.statusCode, 404);
-							done();
-						});
-					});
-				});
-			};
-			sut.uploadFile(filePath, s3fileName, userId, callback);
-		});
 		it("deleteFile should delete folder", function (done) {
-			var folderName  = userId.trim() + '/',
-				userFilelOne  =  s3fileName + 'One',
-				userFileTwo  =  s3fileName + 'Two',
-				userUrlOne  = folderName + s3fileName + 'One',
-				userUrlTwo  = folderName + s3fileName + 'Two',
+			var folderName  = 'test/',
+				fileOne  = folderName + s3fileName + 'One',
+				fileTwo  = folderName + s3fileName + 'Two',
 				downloadFolderCallback = function (err, res) {
 					assert.strictEqual(res.statusCode, 404);
 					done();
@@ -89,31 +67,27 @@ describe("module_awsS3Helper", function () {
 					assert.strictEqual(res.statusCode, 204);
 					sut.download(folderName, downloadFolderCallback);
 				},
-				deleteCallbackTwo = function (err, res) {
-					assert.strictEqual(res.statusCode, 204);
-					done();
-				},
 				deleteCallbackOne = function (err, res) {
 					assert.strictEqual(res.statusCode, 204);
-					sut.deleteFile(userUrlTwo, deleteCallbackTwo);
+					sut.deleteFile(fileTwo, deleteCallbackTwo);
 				},
 				downloadCallbackTwo = function (err, res) {
 					assert.strictEqual(res.statusCode, 200);
-					sut.deleteFile(userUrlOne, deleteCallbackOne);
+					sut.deleteFile(fileOne, deleteCallbackOne);
 				},
 				uploadCallbackTwo = function (err, res) {
 					assert.strictEqual(res.statusCode, 200);
-					sut.download(userUrlTwo, downloadCallbackTwo);
+					sut.download(fileTwo, downloadCallbackTwo);
 				},
 				downloadCallbackOne = function (err, res) {
 					assert.strictEqual(res.statusCode, 200);
-					sut.uploadFile(filePath, userFileTwo, userId, uploadCallbackTwo);
+					sut.uploadFile(filePath, fileTwo, uploadCallbackTwo);
 				},
 				uploadCallbackOne = function (err, res) {
 					assert.strictEqual(res.statusCode, 200);
-					sut.download(userUrlOne, downloadCallbackOne);
+					sut.download(fileOne, downloadCallbackOne);
 				};
-			sut.uploadFile(filePath, userFilelOne, userId, uploadCallbackOne);
+			sut.uploadFile(filePath, fileOne, uploadCallbackOne);
 		});
 	});
 	describe('uploadBuffer', function () {
@@ -131,20 +105,6 @@ describe("module_awsS3Helper", function () {
 			};
 			sut.uploadBuffer(buffer, s3fileName, callback);
 		});
-		it("should add trimmed userId to storage name when provided and upload a buffer to s3", function (done) {
-			var actual,
-			fileToDelete = userId.trim() + '/' + s3fileName, 
-			deleteCallback = function (err, res) {
-				assert.strictEqual(204, res.statusCode);
-				done();
-			},
-			callback = function (err, res) {
-				actual = res.client._httpMessage.url;
-				assert.strictEqual(200, res.statusCode);
-				sut.deleteFile(fileToDelete, deleteCallback);
-			};
-			sut.uploadBuffer(buffer, s3fileName, userId, callback);
-		});
 	});
 	describe('uploadStream', function () {
 		it("should upload file to s3 from stream", function (done) {
@@ -161,22 +121,6 @@ describe("module_awsS3Helper", function () {
 				sut.deleteFile(s3fileName, deleteCallback);
 			};
 			sut.uploadStream(stream, s3fileName, callback);
-		});
-		it("should add trimmed userId to storage name when provided and upload file to s3 from stream", function (done) {
-			var actual,
-			fileToDelete = userId.trim() + '/' + s3fileName, 
-			stream  = fs.createReadStream(filePath),
-			deleteCallback = function (err, res) {
-				assert.strictEqual(204, res.statusCode);
-				done();
-			},
-			callback = function (err, res) {
-				actual = res.client._httpMessage.url;
-				assert.strictEqual(200, res.statusCode);
-				assert.strictEqual(actual, expectedUserUrl);
-				sut.deleteFile(fileToDelete, deleteCallback);
-			};
-			sut.uploadStream(stream, s3fileName, userId, callback);
 		});
 	});
 });

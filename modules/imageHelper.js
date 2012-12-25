@@ -51,7 +51,7 @@ exports.imageHelper = function (imagemagick, spawn, Stream, fs) {
 				var fileSize = features.filesize,
 					bytes = that.getFileBytes(fileSize);
 					if (callback) {
-						callback(bytes  > limit);
+						callback(bytes > limit);
 					}
 			});
 		},

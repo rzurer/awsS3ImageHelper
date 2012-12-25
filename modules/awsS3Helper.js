@@ -18,46 +18,35 @@ exports.awsS3Helper = function (common, fs, mime, knox, fileHelper) {
             }
             return contentType;
         },
-        createS3FileName = function (userId, fileName) {
-  			return userId && userId.trim().length > 0 ? userId.trim() + '/' + fileName : fileName;   	
-        },
 		that = {
-			uploadFile : function (filePath, fileName, userId, callback) {
+			uploadFile : function (filePath, fileName, callback) {
 				var s3Filename;
-				if ('function' == typeof userId) {
-					callback = userId;
-					userId = '';
-				}			
-				s3Filename = createS3FileName(userId, fileName);
-				client.putFile(filePath, s3Filename, headers, function (err, res) { 
+				client.putFile(filePath, fileName, headers, function (err, res) { 
 					if (callback) {
 						callback(err, res);
 					}
 				});
 			},
-			uploadBuffer : function (buffer, fileName, userId, callback) {
-				var s3Filename;
-				if ('function' == typeof userId) {
-					callback = userId;
-					userId = '';
-				}					
-				s3Filename = createS3FileName(userId, fileName);
-				client.putBuffer(buffer, s3Filename, headers, function (err, res) { 
+			uploadBuffer : function (buffer, fileName, callback) {
+				client.putBuffer(buffer, fileName, headers, function (err, res) { 
 					if (callback) {
 						callback(err, res);
 					}
 				});
 			},
-			uploadStream : function (stream, fileName, userId, callback) {
+			uploadStream : function (stream, fileName, callback) {
 				fileHelper.getBuffer(stream, function (buffer) {
-					that.uploadBuffer(buffer, fileName, userId, callback);						
+					that.uploadBuffer(buffer, fileName, callback);						
 				});
 			},
 			download : function (fileName, callback) {	
 				client.getFile(fileName, callback);
 			},
-			deleteFile : function (fileName, callback) {	
+			deleteFile : function (fileName, callback) {
 				client.deleteFile(fileName, callback);
+			},
+			deleteFiles : function (fileNames, callback) {
+				client.deleteMultiple(fileNames, callback);			
 			},
 		};
 	return that;
