@@ -78,9 +78,9 @@ describe('module_imageHelper', function () {
 	});
 	describe('validateSize', function () {
 		it("should throw when limit is undefined", function (done) {
-			var error;	
+			var error;
 			try {
-				sut.validateSize(image, undefined);			
+				sut.validateSize(image, undefined);
 			} catch (err) {
 				error = err;
 			}
@@ -90,31 +90,32 @@ describe('module_imageHelper', function () {
 		it("should return true when file from disk is greater than limit", function (done) {
 			var callback = function (isTooBig) {
 				assert.ok(isTooBig);
-				done();		
-			}
-			sut.validateSize(image, 871000, callback)
+				done();
+			};
+			sut.validateSize(image, 871000, callback);
 		});
 		it("should return false when file from disk is less than limit", function (done) {
 			var callback = function (isTooBig) {
 				assert.ok(!isTooBig);
-				done();		
-			}
-			sut.validateSize(image, 900000, callback)
+				done();
+			};
+			sut.validateSize(image, 900000, callback);
 		});
 		it("should return true when file from url is greater than limit", function (done) {
 			var callback = function (isTooBig) {
 				assert.ok(isTooBig);
-				done();		
-			}
-			sut.validateSize(externalUrl, 455000, callback)
+				done();
+			};
+			sut.validateSize(externalUrl, 455000, callback);
 		});
 		it("should return false when file from url is less than limit", function (done) {
 			var callback = function (isTooBig) {
 				assert.ok(!isTooBig);
-				done();		
-			}
-			sut.validateSize(externalUrl, 500000, callback)
-		});	});
+				done();
+			};
+			sut.validateSize(externalUrl, 500000, callback);
+		});
+	});
 	describe('getFeatures', function () {
 		it("should get width height and format from file on disk", function (done) {
 			var callback = function (features) {
@@ -152,16 +153,32 @@ describe('module_imageHelper', function () {
 	});
 	describe('resizeFromFile', function () {
 		it("should get an image from disk resize and pipe it into a stream", function (done) {
-			var filePath = folderPath +  "file_to_upload.png",
-				streamOut = fs.createWriteStream(folderPath +  "resized_file_from_disk.png"),
-				callback = function (stream) {
-					stream.pipe(streamOut);
+			var filePath = folderPath +  "file_to_copy_x.jpg",
+				streamOut800 = fs.createWriteStream(folderPath +  "resized_file_800.jpg"),
+				streamOut300 = fs.createWriteStream(folderPath +  "resized_file_300.jpg"),
+				streamOut30 = fs.createWriteStream(folderPath +  "resized_file_30.jpg"),
+				callback800 = function (stream) {
+					stream.pipe(streamOut800);
 					stream.on('end', function () {
-						fs.unlink(folderPath + "resized_file_from_disk.png");
+						fs.unlink(folderPath + "resized_file_800.jpg");
+						fs.unlink(folderPath + "resized_file_300.jpg");
+						fs.unlink(folderPath + "resized_file_30.jpg");
 						done();
 					});
+				},
+				callback300 = function (stream) {
+					stream.pipe(streamOut300);
+					stream.on('end', function () {
+						sut.resizeFromFile(filePath, 800, callback800);
+					});
+				},
+				callback30 = function (stream) {
+					stream.pipe(streamOut30);
+					stream.on('end', function () {
+						sut.resizeFromFile(filePath, 300, callback300);
+					});
 				};
-			sut.resizeFromFile(filePath, 30, callback);
+			sut.resizeFromFile(filePath, 30, callback30);
 		});
 	});
 

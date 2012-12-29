@@ -1,39 +1,51 @@
 "use strict";
 exports.awsS3ImageHelper = function (awsS3Helper, imageHelper, options) {
-	var fs = require('fs'),
+	var awsUrl = "https://philatopedia.s3.amazonaws.com/",
+		folderPath = '/home/zurer/projects/awsS3ImageHelper/public/images/',
+		fs = require('fs'),
 		that = {
-			uploadFromFile : function (filePath, fileName, widths, callback) {
-				var validateSizeCallback;
-				if ('function' !== typeof callback) {
-					callback = widths;
-					widths = [];
-				}
-				validateSizeCallback = function (fileIsTooBig) {
-					if (fileIsTooBig) {
+			uploadFromFile : function (filePath, fileName, sizes, callback) {
+				var validateSizeCallback, count, extension, featuresArray, uploadCallback;
+				validateSizeCallback = function (isTooBig, features) {
+					if (isTooBig) {
 						callback("The maximum file size has been exceeded [" + options.maximumFileSize + "]");
 						return;
 					}
-					if (!widths || widths.length === 0) {
-						awsS3Helper.uploadFile(filePath, fileName, callback);
-						return;
-					}
-					var count = 1;
-					widths.forEach(function (width) {
-						imageHelper.resizeFromFile(filePath, width, function (stream) {
-							var cb = function (err, res) {
-								if (res.statusCode === 200) {
+					extension = "." + features.format;
+					count = 1;
+					featuresArray = [];
+					uploadCallback = function (tempFile, uploadFileName) {
+						awsS3Helper.uploadFile(tempFile, uploadFileName, function (err, res) {
+							if (err) {
+								throw err;
+							}
+							if (res.statusCode === 200) {
+								fs.unlink(tempFile);
+								imageHelper.getFeatures(awsUrl + uploadFileName, function (features) {
+									featuresArray.push(features);
+									if (count === sizes.length) {
+										callback(featuresArray);
+										return;
+									}
 									count += 1;
-								}
-								if (count === widths.length) {
-									callback();
-								}
-							};
-							awsS3Helper.uploadStream(stream, fileName + "_" + width + ".jpg", cb);
+								});
+							}
+						});
+					};
+					sizes.forEach(function (size) {
+						var s3FileName = fileName + '_' + size + extension,
+							tempFile = folderPath +  "resized_file_" + size,// + ".jpg",
+							streamOut = fs.createWriteStream(tempFile);
+						imageHelper.resizeFromFile(filePath, size, function (stream) {
+							stream.pipe(streamOut);
+							stream.on('end', function () {
+								uploadCallback(tempFile, s3FileName);
+							});
 						});
 					});
 				};
 				imageHelper.validateSize(filePath, options.maximumFileSize, validateSizeCallback);
-			},
+			}
 		};
 	return that;
 };

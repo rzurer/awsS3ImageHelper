@@ -3,7 +3,7 @@ exports.awsS3Helper = function (common, fs, mime, knox, fileHelper) {
 	var S3_KEY = 'AKIAJX4OEAZEBFQXY4FA',
 		S3_SECRET = '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',
         S3_BUCKET = 'philatopedia',
-        headers = { 'x-amz-acl': 'public-read' },
+        headers = { 'x-amz-acl': 'public-read', 'Content-Type': 'image/jpeg' },
         client = knox.createClient({
             key: S3_KEY,
             secret: S3_SECRET,

@@ -2,7 +2,7 @@
 "use strict";
 var folderPath = '/home/zurer/projects/awsS3ImageHelper/public/images/',
 	oversizeImage = "/home/zurer/Hide stuff/temp/images/stamps/Aust2pt.jpg", //2170000 bytes
-	filePath = folderPath + "file_to_copy.jpg",
+	//filePath = folderPath + "file_to_copy.jpg",
 	assert = require('assert'),
 	http = require('http'),
 	https = require('https'),
@@ -19,6 +19,7 @@ var folderPath = '/home/zurer/projects/awsS3ImageHelper/public/images/',
 	imageHelper = require('../modules/imageHelper').imageHelper(imagemagick, spawn, Stream, fs),
 	options = {maximumFileSize : 200000 },
 	fileName = 'uploadedFile',
+	awsUrl = "https://philatopedia.s3.amazonaws.com/",
 	sut = require('../modules/awsS3ImageHelper').awsS3ImageHelper(awsS3Helper, imageHelper, options);
 describe('module_awsS3ImageHelper', function () {
 	describe('uploadFromFile', function () {
@@ -29,31 +30,22 @@ describe('module_awsS3ImageHelper', function () {
 					assert.strictEqual(err, "The maximum file size has been exceeded [200000]");
 					done();
 				};
-				sut.uploadFromFile(oversizeImage, fileName, callback);
-			});
-		});
-		describe('when file is not greater than the size limit specified in the options', function () {
-			it("should upload file to s3", function (done) {
-				var deleteCallback = function (err, res) {
-						assert.strictEqual(res.statusCode, 204);
-						done();
-					},
-					callback = function (err, res) {
-						assert.strictEqual(res.statusCode, 200);
-						awsS3Helper.deleteFile(fileName, deleteCallback);
-					};
-				sut.uploadFromFile(filePath, fileName, callback);
+				sut.uploadFromFile(oversizeImage, fileName, [], callback);
 			});
 		});
 		describe('when widths are specified', function () {
 			it("should upload the original and one resized image per width to s3", function (done) {
 				var callback, deleteCallback, fileNames;
-				fileNames = ['uploadedFile_30.jpg', 'uploadedFile_300.jpg', 'uploadedFile_800.jpg'];
+				var filePath = folderPath + "file_to_copy_y.jpg",
+				fileNames = [];
 				deleteCallback = function (err, res) {
 					assert.strictEqual(res.statusCode, 200);
 					done();
 				};
-				callback = function () {
+				callback = function (featuresArray) {
+					featuresArray.forEach(function (features) {
+						fileNames.push(features['base filename']);
+					})
 					awsS3Helper.deleteFiles(fileNames, deleteCallback);
 				};
 				sut.uploadFromFile(filePath, fileName, [800, 300, 30], callback);
