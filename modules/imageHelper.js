@@ -1,9 +1,9 @@
 "use strict";
 exports.imageHelper = function (imagemagick, spawn, Stream, fs) {
-	var resizeFromStream, that, folderPath, doScaleTransform;
+	var resizeFromStream, that, tempPath, doScaleTransform;
 	imagemagick.identify.path = '/usr/bin/identify';
 	imagemagick.convert.path = "/usr/bin/convert";
-	folderPath = '/home/zurer/projects/awsS3ImageHelper/public/images/';
+	tempPath = '/home/zurer/projects/awsS3ImageHelper/public/images/';
 	resizeFromStream  =  function (inputStream, width, height, callback) {
 		var command, args, proc, stream;
 		args = ["-", "-resize", width + "x" + height, "-"];
@@ -17,12 +17,12 @@ exports.imageHelper = function (imagemagick, spawn, Stream, fs) {
 		inputStream.pipe(proc.stdin);
 		callback(stream);
 	};
-	doScaleTransform = function(width, height, size, callback) {
+	doScaleTransform = function (width, height, size, callback) {
 		if (width > height) {
-			height = (height * size) / width;			
+			height = (height * size) / width;
 			width = Math.min(size, width);
 		} else {
-			width = (width * size) / height;			
+			width = (width * size) / height;
 			height = Math.min(size, height);
 		}
 		callback(width, height);
@@ -81,17 +81,17 @@ exports.imageHelper = function (imagemagick, spawn, Stream, fs) {
 				doScaleTransform(features.width, features.height, size, function (width, height) {
 					inputStream = fs.createReadStream(filePath);
 					resizeFromStream(inputStream, width, height, callback);
-				})
-			})
+				});
+			});
 		},
 		resizeFromUrl : function (url, size, callback) {
 			var inputStream;
 			that.getFeatures(url, function (features) {
 				doScaleTransform(features.width, features.height, size, function (width, height) {
-				inputStream = spawn('curl', [url]).stdout;
+					inputStream = spawn('curl', [url]).stdout;
 					resizeFromStream(inputStream, width, height, callback);
-				})
-			})
+				});
+			});
 		}
 
 	};

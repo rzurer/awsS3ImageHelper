@@ -1,6 +1,7 @@
 "use strict";
 exports.fileHelper = function (fs, http, https, url) {
-	var that = {
+	var tempPath = '/home/zurer/projects/awsS3ImageHelper/public/images/',
+		that = {
 			wantSecureTransport : function (inputUrl) {
 				return url.parse(inputUrl).protocol === 'https:';
 			},
@@ -17,6 +18,14 @@ exports.fileHelper = function (fs, http, https, url) {
 						callback();
 					}
 				});
+			},
+			createTempNamedStream : function () {
+				var tempFile = tempPath +  new Date().getTime(),
+					streamOut = fs.createWriteStream(tempFile);
+				return { stream : streamOut, fileName : tempFile};
+			},
+			deleteTempFile : function (tempFile) {
+				fs.unlink(tempFile);
 			},
 			saveFromUrl : function (inputUrl, outputPath, callback) {
 				var writeStream, saveCallback, request;

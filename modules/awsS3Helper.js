@@ -19,16 +19,19 @@ exports.awsS3Helper = function (common, fs, mime, knox, fileHelper) {
             return contentType;
         },
 		that = {
+			philatopediaUrl : function (fileName) {
+				return "https://philatopedia.s3.amazonaws.com/" + fileName;
+			},
 			uploadFile : function (filePath, fileName, callback) {
 				var s3Filename;
-				client.putFile(filePath, fileName, headers, function (err, res) { 
+				client.putFile(filePath, fileName, headers, function (err, res) {
 					if (callback) {
 						callback(err, res);
 					}
 				});
 			},
 			uploadBuffer : function (buffer, fileName, callback) {
-				client.putBuffer(buffer, fileName, headers, function (err, res) { 
+				client.putBuffer(buffer, fileName, headers, function (err, res) {
 					if (callback) {
 						callback(err, res);
 					}
@@ -36,17 +39,17 @@ exports.awsS3Helper = function (common, fs, mime, knox, fileHelper) {
 			},
 			uploadStream : function (stream, fileName, callback) {
 				fileHelper.getBuffer(stream, function (buffer) {
-					that.uploadBuffer(buffer, fileName, callback);						
+					that.uploadBuffer(buffer, fileName, callback);
 				});
 			},
-			download : function (fileName, callback) {	
+			download : function (fileName, callback) {
 				client.getFile(fileName, callback);
 			},
 			deleteFile : function (fileName, callback) {
 				client.deleteFile(fileName, callback);
 			},
 			deleteFiles : function (fileNames, callback) {
-				client.deleteMultiple(fileNames, callback);			
+				client.deleteMultiple(fileNames, callback);
 			},
 		};
 	return that;
