@@ -20,8 +20,7 @@ var assert = require('assert'),
 	regularImageY = folderPath + "file_to_copy_y.jpg", //18428  bytes
 	regularImageX = folderPath + "file_to_copy_x.jpg", //137247  bytes
 	oversizeImage = "/home/zurer/Hide stuff/temp/images/stamps/Aust2pt.jpg", //2169972  bytes
-	sut = require('../modules/awsS3ImageHelper').awsS3ImageHelper(awsS3Helper, imageHelper, fileHelper, emitter);
-	
+	sut = require('../modules/awsS3ImageHelper').awsS3ImageHelper(awsS3Helper, imageHelper, fileHelper, emitter);	
 describe('module_awsS3ImageHelper', function () {
 	describe('uploadFromFile', function () {
 		describe('when file is larger than the size limit specified in the options', function () {
