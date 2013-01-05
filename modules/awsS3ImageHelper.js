@@ -1,52 +1,66 @@
 "use strict";
-exports.awsS3ImageHelper = function (awsS3Helper, imageHelper, fileHelper, events, options) {
-	var emitter = new events.EventEmitter();
+exports.awsS3ImageHelper = function (awsS3Helper, imageHelper, fileHelper, emitter, options) {
+	var defaultThumbnailWidths = [300, 30],
+		defaultMaximumFileSize =  200000,
+		defaultNamingStrategy = function (format, width) {
+			var time = String(new Date().getTime()),
+				extension = "." + format;
+			return width ? time + '_' + width + extension : time + extension;
+		},
+		maximumFileSize = (options && options.maximumFileSize) || defaultMaximumFileSize,
+		thumbnailWidths = (options && options.thumbnailWidths) || defaultThumbnailWidths,
+		namingStrategy = (options && options.namingStrategy) || defaultNamingStrategy;
 	return {
 		on : function (event, listener) {
 			emitter.on(event, listener);
 		},
-		uploadFromFile : function (filePath, fileName, sizes) {
+		uploadFromFile : function (filePath) {
 			var featuresArray = [],
+				imageFormat,
 				count = 1,
-				uploadToS3 = function (tempFileName, s3FileName) {
-					awsS3Helper.uploadFile(tempFileName, s3FileName, function (err, res) {
-						if (err) {
-							throw err;
-						}
-						if (res.statusCode === 200) {
-							emitter.emit("uploaded", tempFileName);
-							imageHelper.getFeatures(awsS3Helper.philatopediaUrl(s3FileName), function (features) {
-								featuresArray.push(features);
-								if (count === sizes.length) {
-									emitter.emit("end", featuresArray);
-									return;
-								}
-								count += 1;
-							});
-						}
-					});
-				},
-				resize = function (s3FileName, size) {
-					var temp = fileHelper.createTempNamedStream();
-					emitter.on("uploaded", fileHelper.deleteTempFile);
-					imageHelper.resizeFromFile(filePath, size, function (stream) {
-						stream.pipe(temp.stream);
-						stream.on('end', function () {
-							uploadToS3(temp.fileName, s3FileName);
-						});
-					});
-				},
 				validateSizeCallback = function (isTooBig, features) {
+					var createThumbnail = function (width) {
+						var s3FileName = namingStrategy(imageFormat, width),
+							url = awsS3Helper.philatopediaUrl(s3FileName);
+						imageHelper.resizeFromFile(filePath, width, function (stream) {
+							var tempNamedStream = fileHelper.createTempNamedStream();
+							stream.pipe(tempNamedStream.stream);
+							stream.on('end', function () {
+								awsS3Helper.uploadFile(tempNamedStream.fileName, s3FileName, function (err, res) {
+									if (err) {
+										throw err;
+									}
+									if (res.statusCode === 200) {
+										emitter.emit("uploaded", tempNamedStream.fileName);
+										imageHelper.getFeatures(url, function (features) {
+											featuresArray.push({
+												url : url,
+												s3FileName : s3FileName,
+												width : features.width,
+												height : features.height
+											});
+											if (count === thumbnailWidths.length) {
+												emitter.emit("end", featuresArray);
+												emitter.removeListener("uploaded", fileHelper.deleteTempFile);
+												return;
+											}
+											count += 1;
+										});
+									}
+								});
+							});
+						});
+					};
 					if (isTooBig) {
-						emitter.emit("error", "The maximum file size has been exceeded [" + options.maximumFileSize + "]");
+						emitter.emit("error", "The maximum file size has been exceeded [" + maximumFileSize + "]");
 						return;
 					}
-					sizes.forEach(function (size) {
-						var s3FileName = fileName + '_' + size + "." + features.format;
-						resize(s3FileName, size);
-					});
+					imageFormat = features.format;
+					emitter.on("uploaded", fileHelper.deleteTempFile);
+					thumbnailWidths.push(features.width);
+					thumbnailWidths.forEach(createThumbnail);
 				};
-			imageHelper.validateSize(filePath, options.maximumFileSize, validateSizeCallback);
+			imageHelper.validateSize(filePath, maximumFileSize, validateSizeCallback);
 		}
 	};
 };
