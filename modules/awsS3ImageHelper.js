@@ -9,58 +9,69 @@ exports.awsS3ImageHelper = function (awsS3Helper, imageHelper, fileHelper, emitt
 		},
 		maximumFileSize = (options && options.maximumFileSize) || defaultMaximumFileSize,
 		thumbnailWidths = (options && options.thumbnailWidths) || defaultThumbnailWidths,
-		namingStrategy = (options && options.namingStrategy) || defaultNamingStrategy;
+		namingStrategy = (options && options.namingStrategy) || defaultNamingStrategy,
+		featuresArray = [],
+		count = 1,
+		foo = function (features, url, s3FileName) {
+			featuresArray.push({
+				url : url,
+				s3FileName : s3FileName,
+				width : features.width,
+				height : features.height
+			});
+			if (count === thumbnailWidths.length) {
+				emitter.emit("end", featuresArray);
+				emitter.removeListener("uploaded", fileHelper.deleteTempFile);
+				return;
+			}
+			count += 1;
+		},
+		bar = function (err, res, tempFilename, features, url, s3FileName) {
+			if (err) {
+				throw err;
+			}
+			if (res.statusCode === 200) {
+				emitter.emit("uploaded", tempFilename);
+				imageHelper.getFeatures(url, function () {
+					foo(features, url, s3FileName);
+				});
+			}
+		},
+		baz = function (stream, s3FileName, features, url) {
+			var tempNamedStream = fileHelper.createTempNamedStream();
+			stream.pipe(tempNamedStream.stream);
+			stream.on('end', function () {
+				awsS3Helper.uploadFile(tempNamedStream.fileName, s3FileName, function (err, res) {
+					bar(err, res, tempNamedStream.fileName, features, url, s3FileName);
+				});
+			});
+		},
+		createThumbnail = function (imageFormat, width, filePath, features) {
+			var s3FileName = namingStrategy(imageFormat, width),
+				url = awsS3Helper.philatopediaUrl(s3FileName);
+			imageHelper.resizeFromFile(filePath, width, function (stream) {
+				baz(stream, s3FileName, features, url);
+			});
+		},
+		validateSizeCallback = function (isTooBig, features, filePath) {
+			if (isTooBig) {
+				emitter.emit("error", "The maximum file size has been exceeded [" + maximumFileSize + "]");
+				return;
+			}
+			emitter.on("uploaded", fileHelper.deleteTempFile);
+			thumbnailWidths.push(features.width);
+			thumbnailWidths.forEach(function (width) {
+				createThumbnail(features.format, width, filePath, features);
+			});
+		};
 	return {
 		on : function (event, listener) {
 			emitter.on(event, listener);
 		},
 		uploadFromFile : function (filePath) {
-			var featuresArray = [],
-				imageFormat,
-				count = 1,
-				validateSizeCallback = function (isTooBig, features) {
-					var createThumbnail = function (width) {
-						var s3FileName = namingStrategy(imageFormat, width),
-							url = awsS3Helper.philatopediaUrl(s3FileName);
-						imageHelper.resizeFromFile(filePath, width, function (stream) {
-							var tempNamedStream = fileHelper.createTempNamedStream();
-							stream.pipe(tempNamedStream.stream);
-							stream.on('end', function () {
-								awsS3Helper.uploadFile(tempNamedStream.fileName, s3FileName, function (err, res) {
-									if (err) {
-										throw err;
-									}
-									if (res.statusCode === 200) {
-										emitter.emit("uploaded", tempNamedStream.fileName);
-										imageHelper.getFeatures(url, function (features) {
-											featuresArray.push({
-												url : url,
-												s3FileName : s3FileName,
-												width : features.width,
-												height : features.height
-											});
-											if (count === thumbnailWidths.length) {
-												emitter.emit("end", featuresArray);
-												emitter.removeListener("uploaded", fileHelper.deleteTempFile);
-												return;
-											}
-											count += 1;
-										});
-									}
-								});
-							});
-						});
-					};
-					if (isTooBig) {
-						emitter.emit("error", "The maximum file size has been exceeded [" + maximumFileSize + "]");
-						return;
-					}
-					imageFormat = features.format;
-					emitter.on("uploaded", fileHelper.deleteTempFile);
-					thumbnailWidths.push(features.width);
-					thumbnailWidths.forEach(createThumbnail);
-				};
-			imageHelper.validateSize(filePath, maximumFileSize, validateSizeCallback);
+			imageHelper.validateSize(filePath, maximumFileSize, function (isTooBig, features) {
+				validateSizeCallback(isTooBig, features, filePath);
+			});
 		}
 	};
 };
