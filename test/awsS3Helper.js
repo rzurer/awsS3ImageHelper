@@ -2,22 +2,18 @@
 "use strict";
 var awsUrl = "https://philatopedia.s3.amazonaws.com/",
     folderPath = '/home/zurer/projects/awsS3ImageHelper/public/images/',
+	tempPath = '/home/zurer/projects/awsS3ImageHelper/public/temp/',
 	filePath = folderPath + "file_to_upload.png",
 	s3fileName = "s3UploadedFile",
 	expected = awsUrl + s3fileName,
 	buffer = new Buffer('now is the time for all good men to come to the aid of their party'),
-	Stream = require('stream'),
 	expectedUserUrl = awsUrl,
 	assert = require('assert'),
-	http = require('http'),
-	https = require('https'),
-	url = require('url'),
-    fs = require('fs'),
-    mime = require('mime'),
+	fs = require('fs'),
 	knox = require('knox'),
-	common = require('../../common/modules/common').common(),
-	fileHelper = require('../modules/fileHelper').fileHelper(fs, http, https, url),
-	sut = require('../modules/awsS3Helper').awsS3Helper(common, fs, mime, knox, fileHelper);
+    mime = require('mime'),
+	fileHelper = require('../modules/fileHelper').fileHelper(tempPath),
+	sut = require('../modules/awsS3Helper').awsS3Helper(knox, mime, fileHelper);
 describe("module_awsS3Helper", function () {
 	describe('uploadFile and deleteFile', function () {
 		it("should upload and delete a file from s3", function (done) {

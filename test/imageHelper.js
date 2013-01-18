@@ -5,11 +5,8 @@ var assert = require('assert'),
 	externalUrl = 'http://upload.wikimedia.org/wikipedia/commons/4/4f/Big%26Small_edit_1.jpg',
 	image = "/home/zurer/Hide stuff/temp/images/stamps/egypttobaccotax.png",
 	fs = require('fs'),
-	spawn = require('child_process').spawn,
-	Stream = require('stream'),
 	imagemagick = require('imagemagick'),
-	common = require('../../common/modules/common').common(),
-	sut = require('../modules/imageHelper').imageHelper(imagemagick, spawn, Stream, fs);
+	sut = require('../modules/imageHelper').imageHelper(imagemagick);
 describe('module_imageHelper', function () {
 	describe('getFeatures', function () {
 		it("should get width height and format from file on disk", function (done) {

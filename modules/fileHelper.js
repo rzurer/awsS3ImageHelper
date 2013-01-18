@@ -1,6 +1,9 @@
 "use strict";
-exports.fileHelper = function (fs, http, https, url) {
-	var tempPath = '/home/zurer/projects/awsS3ImageHelper/public/images/',
+exports.fileHelper = function (tempPath) {
+	var fs = require("fs"),
+		http = require("http"),
+		https = require("https"),
+		url = require("url"),
 		that = {
 			wantSecureTransport : function (inputUrl) {
 				return url.parse(inputUrl).protocol === 'https:';
@@ -29,7 +32,7 @@ exports.fileHelper = function (fs, http, https, url) {
 			},
 			getUrlStream : function (inputUrl, callback) {
 				if (that.wantSecureTransport(inputUrl)) {
-					https.get(inputUrl,  callback(response));
+					https.get(inputUrl, callback);
 					return;
 				}
 				http.get(inputUrl, callback);
@@ -71,7 +74,7 @@ exports.fileHelper = function (fs, http, https, url) {
 				});
 				req.end();
 			},
-			getFileSizeFromFile: function (filePath, callback) {
+			getFileSizeFromFile : function (filePath, callback) {
 				fs.stat(filePath, function (err, stats) {
 					if (err) {
 						throw err;

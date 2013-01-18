@@ -1,12 +1,10 @@
 /*global  describe, beforeEach, afterEach, i, it*/
 "use strict";
 var assert = require('assert'),
-	folderPath = '/home/zurer/projects/awsS3ImageHelper/public/images/',
 	fs = require('fs'),
-	url = require('url'),
-	http = require('http'),
-	https = require('https'),
-	sut = require('../modules/fileHelper').fileHelper(fs, http, https, url),
+	folderPath = '/home/zurer/projects/awsS3ImageHelper/public/images/',
+    tempPath = '/home/zurer/projects/awsS3ImageHelper/public/temp/',
+	sut = require('../modules/fileHelper').fileHelper(tempPath),
 	tearDown = function () {
 		fs.unlink(folderPath + "copied_file.jpg");
 		fs.unlink(folderPath + "downloaded_file.png");
@@ -24,8 +22,8 @@ describe('module_fileHelper', function () {
 		sut.saveFromUrl(inputUrl, outputPath, function () { done(); });
 	});
 	it("getFileSizeFromUrl should return file size of remote file", function (done) {
-		var url = "http://www.stamp-photos.com/pictures/1821.jpg",
-			expected = 45627;
+		var url = "http://oregonstate.edu/events/stamp/images/pauling_300dpi.jpg",
+			expected = 534427;
 		sut.getFileSizeFromUrl(url, function (actual) {
 			assert.strictEqual(actual, expected);
 			done();

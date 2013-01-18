@@ -1,6 +1,8 @@
 "use strict";
-exports.awsS3ImageHelper = function (awsS3Helper, imageHelper, fileHelper, emitter, options) {
-	var defaultThumbnailWidths = [300, 30],
+exports.awsS3ImageHelper = function (awsS3Helper, imageHelper, fileHelper, options) {
+	var Emitter = require('events').EventEmitter,
+		emitter = new Emitter(),
+		defaultThumbnailWidths = [300, 30],
 		defaultMaximumFileSize =  200000,
 		defaultNamingStrategy = function (format, width) {
 			var time = String(new Date().getTime()),
@@ -46,28 +48,56 @@ exports.awsS3ImageHelper = function (awsS3Helper, imageHelper, fileHelper, emitt
 				});
 			});
 		},
-		createThumbnail = function (imageFormat, width, filePath, features) {
+		createThumbnailFromFile = function (imageFormat, width, filePath, features) {
 			var s3FileName = namingStrategy(imageFormat, width),
 				url = awsS3Helper.philatopediaUrl(s3FileName);
 			imageHelper.resizeFromFile(filePath, width, function (stream) {
 				uploadFileToS3(stream, s3FileName, features, url);
 			});
+		},
+		createThumbnailFromUrl = function (imageFormat, width, fileUrl, features) {
+			var s3FileName = namingStrategy(imageFormat, width),
+				url = awsS3Helper.philatopediaUrl(s3FileName);
+			imageHelper.resizeFromUrl(fileUrl, width, function (stream) {
+				uploadFileToS3(stream, s3FileName, features, url);
+			});
+		},
+		createSizeLimitExceededError = function (actualSize) {
+			return "The maximum file size has been exceeded [Maximum File Size:" + maximumFileSize + " Actual Size:" + actualSize + "]";
 		};
 	return {
 		on : function (event, listener) {
 			emitter.on(event, listener);
 		},
+		once : function (event, listener) {
+			emitter.once(event, listener);
+		},
 		uploadFromFile : function (filePath) {
 			fileHelper.getFileSizeFromFile(filePath, function (size) {
 				if (size > maximumFileSize) {
-					emitter.emit("error", "The maximum file size has been exceeded [" + maximumFileSize + "]");
+					emitter.emit("error", createSizeLimitExceededError(size));
 					return;
 				}
 				emitter.on("uploaded", fileHelper.deleteTempFile);
 				imageHelper.getFeatures(filePath, function (features) {
 					thumbnailWidths.push(features.width);
 					thumbnailWidths.forEach(function (width) {
-						createThumbnail(features.format, width, filePath, features);
+						createThumbnailFromFile(features.format, width, filePath, features);
+					});
+				});
+			});
+		},
+		uploadFromUrl : function (url) {
+			fileHelper.getFileSizeFromUrl(url, function (size) {
+				if (size > maximumFileSize) {
+					emitter.emit("error",  createSizeLimitExceededError(size));
+					return;
+				}
+				emitter.on("uploaded", fileHelper.deleteTempFile);
+				imageHelper.getFeatures(url, function (features) {
+					thumbnailWidths.push(features.width);
+					thumbnailWidths.forEach(function (width) {
+						createThumbnailFromUrl(features.format, width, url, features);
 					});
 				});
 			});

@@ -1,5 +1,5 @@
 "use strict";
-exports.awsS3Helper = function (common, fs, mime, knox, fileHelper) {
+exports.awsS3Helper = function (knox, mime, fileHelper) {
 	var S3_KEY = 'AKIAJX4OEAZEBFQXY4FA',
 		S3_SECRET = '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',
         S3_BUCKET = 'philatopedia',
