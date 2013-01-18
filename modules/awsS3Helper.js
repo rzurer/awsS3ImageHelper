@@ -22,6 +22,9 @@ exports.awsS3Helper = function (common, fs, mime, knox, fileHelper) {
 			philatopediaUrl : function (fileName) {
 				return "https://philatopedia.s3.amazonaws.com/" + fileName;
 			},
+			getPutRequest : function (buffer, headers) {
+				return client.put(buffer, headers);
+			},
 			uploadFile : function (filePath, fileName, callback) {
 				client.putFile(filePath, fileName, headers, function (err, res) {
 					if (callback) {

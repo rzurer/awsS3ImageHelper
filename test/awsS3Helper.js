@@ -6,6 +6,7 @@ var awsUrl = "https://philatopedia.s3.amazonaws.com/",
 	s3fileName = "s3UploadedFile",
 	expected = awsUrl + s3fileName,
 	buffer = new Buffer('now is the time for all good men to come to the aid of their party'),
+	Stream = require('stream'),
 	expectedUserUrl = awsUrl,
 	assert = require('assert'),
 	http = require('http'),
@@ -93,33 +94,33 @@ describe("module_awsS3Helper", function () {
 	describe('uploadBuffer', function () {
 		it("should upload a buffer to s3", function (done) {
 			var actual,
-			deleteCallback = function (err, res) {
-				assert.strictEqual(204, res.statusCode);
-				done();
-			},
-			callback = function (err, res) {
-				actual = res.client._httpMessage.url;
-				assert.strictEqual(200, res.statusCode);
-				assert.strictEqual(actual, expected);
-				sut.deleteFile(s3fileName, deleteCallback);
-			};
+				deleteCallback = function (err, res) {
+					assert.strictEqual(204, res.statusCode);
+					done();
+				},
+				callback = function (err, res) {
+					actual = res.client._httpMessage.url;
+					assert.strictEqual(200, res.statusCode);
+					assert.strictEqual(actual, expected);
+					sut.deleteFile(s3fileName, deleteCallback);
+				};
 			sut.uploadBuffer(buffer, s3fileName, callback);
 		});
 	});
 	describe('uploadStream', function () {
 		it("should upload file to s3 from stream", function (done) {
 			var actual,
-			stream  = fs.createReadStream(filePath),
-			deleteCallback = function (err, res) {
-				assert.strictEqual(204, res.statusCode);
-				done();
-			},
-			callback = function (err, res) {
-				var actual = res.client._httpMessage.url;
-				assert.strictEqual(200, res.statusCode);
-				assert.strictEqual(actual, expected);
-				sut.deleteFile(s3fileName, deleteCallback);
-			};
+				stream  = fs.createReadStream(filePath),
+				deleteCallback = function (err, res) {
+					assert.strictEqual(204, res.statusCode);
+					done();
+				},
+				callback = function (err, res) {
+					var actual = res.client._httpMessage.url;
+					assert.strictEqual(200, res.statusCode);
+					assert.strictEqual(actual, expected);
+					sut.deleteFile(s3fileName, deleteCallback);
+				};
 			sut.uploadStream(stream, s3fileName, callback);
 		});
 	});

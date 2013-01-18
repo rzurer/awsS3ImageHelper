@@ -51,4 +51,35 @@ describe('module_awsS3ImageHelper', function () {
 			});
 		});
 	});
+	describe('vvvvv', function () {
+		describe('when file is larger than the size limit specified in the options', function () {
+			it("should notify", function () {
+			// var http = require('http');
+			// var options = {method: 'HEAD', host: 'stackoverflow.com', port: 80, path: '/'};
+			// var req = http.request(options, function(res) {
+			//     console.log(JSON.stringify(res.headers));
+			//     done();
+			//   }
+			// );
+			//req.end();
+			// 	//download once, create buffer and resize?
+			// 	//check url file size first
+			// 	//get rid of disk io somehow
+			// 	var options = {
+			// 		host: 'www.stamp-photos.com',
+			// 		port: 80,
+			// 		path: '/pictures/1821.jpg'
+			// 	};
+			// 	http.get(options, function(res) {
+			// 		console.log("Got response: " + res.statusCode);
+			// 		for(var item in res.headers) {
+			// 			console.log(item + ": " + res.headers[item]);
+			// 		}
+			// 		done();
+			// 	}).on('error', function(e) {
+			// 		console.log("Got error: " + e.message);
+			// 	});
+		 	});
+		});
+	});
 });
