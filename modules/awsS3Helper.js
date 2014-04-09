@@ -1,7 +1,7 @@
 "use strict";
 exports.awsS3Helper = function (knox, mime, fileHelper) {
-	var S3_KEY = 'AKIAJX4OEAZEBFQXY4FA',
-		S3_SECRET = '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',
+	var S3_KEY = 'How Stupid Was I To leave',
+		S3_SECRET = 'this information in a public place. duh',
         S3_BUCKET = 'philatopedia',
         headers = { 'x-amz-acl': 'public-read', 'Content-Type': 'image/jpeg' },
         client = knox.createClient({
